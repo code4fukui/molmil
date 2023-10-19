@@ -1,3 +1,5 @@
+export const setPluginPymolScript = (molmil, molmil_dep) => {
+
 molmil.commandLine.prototype.bindPymolInterface = function() {
   //this.environment.console.log("Pymol-like command interface bound.");
   this.pyMol = {};
@@ -1985,3 +1987,5 @@ molmil.commandLines.pyMol.show = function(repr, atoms, quiet) {
   
   this.cli_soup.renderer.rebuildRequired = true;
 }
+
+};

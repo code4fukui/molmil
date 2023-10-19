@@ -17,13 +17,22 @@
     }
     
   </style>
-  
+  <link rel="stylesheet" href="molmil.css">
+  <script type="module">
+  import { molmil } from "./molmil.js";
+
+  onload = () => {
+    molmil.autoSetup();
+  };
+  </script>
+  <!--
   <script src="coi-serviceworker.min.js" async defer></script>
   <script src="molmil.js" async defer></script>
+  -->
   
   </head>
   
-  <body onload="molmil.autoSetup();">
+  <body>
     <canvas class="molmilViewer"></canvas>
   </body>
 </html>

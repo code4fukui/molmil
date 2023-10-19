@@ -8,7 +8,7 @@
  *   See https://github.com/gjbekker/molmil/blob/master/LICENCE.md
  */
 
-var molmil_dep = molmil_dep || {};
+export var molmil_dep = molmil_dep || {};
 
 // settings
 
@@ -234,6 +234,7 @@ molmil_dep.initCheck = function() {
 };
 
 molmil_dep.init = function() {
+  /*
   if (! window.molmil.configBox || molmil.configBox.initFinished) return;
   var deps = molmil.settings.dependencies, obj;
   var head = document.getElementsByTagName("head")[0];
@@ -249,6 +250,7 @@ molmil_dep.init = function() {
     obj = document.createElement("link"); obj.rel = "StyleSheet"; obj.href = molmil.settings.src+css[i];
     obj = head.appendChild(obj);
   }
+  */
 };
 
 molmil_dep.findPos=function(obj) {

@@ -14,8 +14,14 @@
 // then, set it up so that each object can be clipped differently
 // molmil.entryObject.programs = [];
 // dynamically update the programs (e.g. if a wireframe one isn't necessary, don't use it)
- 
-var molmil = molmil || {};
+
+import { molmil_dep } from "./molmil_dep.js";
+import { mat2, mat3, mat4, quat, quat2, vec2, vec3, vec4 } from "https://code4fukui.github.io/gl-matrix/dist/esm/index.js";
+import { setPluginUI } from "./plugins/UI.js";
+import { setPluginPymolScript } from "./plugins/pymol-script.js";
+import { setPluginLoaders } from "./plugins/loaders.js";
+
+export var molmil = molmil || {};
 
 molmil.canvasList = []; molmil.mouseDown = false; molmil.mouseDownS = {}; molmil.mouseMoved = false; molmil.Xcoord = 0; molmil.Ycoord = 0; molmil.Zcoord = 0; molmil.activeCanvas = null; molmil.touchList = null; molmil.touchMode = false; molmil.preRenderFuncs = [];
 molmil.longTouchTID = null; molmil.previousTouchEvent = null;
@@ -37,7 +43,7 @@ molmil.settings_default = {
  
   /* change the implementation to force usage of molmil-app */
   molmil_video_url: undefined,
-  dependencies: ["lib/gl-matrix-min.js"],
+  //dependencies: ["lib/gl-matrix-min.js"],
 };
 
 molmil.cli_canvas = null;
@@ -373,8 +379,8 @@ molmil.SNFG.NEU = {"type": "diamond", "rgba": [161, 122, 77, 255], "name": "Neu"
 molmil.SNFG.GMH = {"type": "flat-hex", "rgba": [0, 166, 81, 255], "name": "LDmanHep"};
 
 molmil.initSettings = function () {
-  cifDicLocJSON = "https://pdbj.org/molmil2/mmcif_pdbx_v50_summary.json";
-  cifDicLoc = "https://data.pdbj.org/pdbjplus/dictionaries/mmcif_pdbx.dic";
+  //cifDicLocJSON = "https://pdbj.org/molmil2/mmcif_pdbx_v50_summary.json";
+  //cifDicLoc = "https://data.pdbj.org/pdbjplus/dictionaries/mmcif_pdbx.dic";
   
   var colors = {
     DUMMY: [255, 20, 147],
@@ -911,10 +917,13 @@ molmil.viewer.prototype.loadStructure = function(loc, format, ondone, settings) 
   if (settings.gzipped == true || settings.gzipped == 1) gz = true;
   if (gz && ! window.hasOwnProperty("pako")) {
     settings.bakadl = true;
+    /*
     var head = document.getElementsByTagName("head")[0];
     var obj = molmil_dep.dcE("script"); obj.src = molmil.settings.src+"lib/pako.js"; 
     obj.soup = this; obj.argList = [loc, format, ondone, settings]; obj.onload = function() {molmil_dep.asyncStart(this.soup.loadStructure, this.argList, this.soup, 0);};
     head.appendChild(obj);
+    */
+    molmil_dep.asyncStart(this.soup.loadStructure, this.argList, this.soup, 0);
     return;
   }
 
@@ -1492,7 +1501,10 @@ molmil.viewer.prototype.getMolObject4ChainAlt = function(chain, RSID) {
 
 
 molmil.viewer.prototype.load_obj = function(data, filename, settings) {
-  return molmil.loadPlugin(molmil.settings.src+"plugins/loaders.js", this.load_obj, this, [data, filename, settings]);
+  //console.log(data, filename, settings);
+  //return molmil.loadPlugin(molmil.settings.src+"plugins/loaders.js", this.load_obj, this, [data, filename, settings]);
+  setPluginLoaders(molmil, molmil_dep);
+  return molmil.load_obj(data, filename, settings);
 };
 
 molmil.viewer.prototype.load_ccp4 = function(buffer, filename, settings) {
@@ -1574,7 +1586,9 @@ molmil.viewer.prototype.calcZ = function(geomRanges) {
 
 // ** loads polygon-JSON data **
 molmil.viewer.prototype.load_polygonJSON = function(jso, filename, settings) { // this should be modified to use the modern renderer function instead
-  return molmil.loadPlugin(molmil.settings.src+"plugins/loaders.js", this.load_polygonJSON, this, [jso, filename, settings]);
+  //return molmil.loadPlugin(molmil.settings.src+"plugins/loaders.js", this.load_polygonJSON, this, [jso, filename, settings]);
+  setPluginLoaders(molmil, molmil_dep);
+  return new molmil.viewer().load_polygonJSON(jso, filename, settings);
 };
 
 // ** loads polygon-XML data **
@@ -8599,9 +8613,6 @@ molmil.commandLine = function(canvas) {
     if (molmil.onInterfacebind) molmil.onInterfacebind(this);
   };
   
-  if (! molmil.commandLines.pyMol) {
-    molmil.loadPlugin(molmil.settings.src+"plugins/pymol-script.js", init, this, [], true);
-  }
 };
 
 molmil.color2rgba = function(clr) {
@@ -8752,7 +8763,7 @@ molmil.commandLine.prototype.runCommand = function(command) { // note the /this/
   if (command.match(/\bfunction\b/)) command = command.replace(/(\b|;)function\s+(\w+)/g, "$1global.$2 = function"); // make sure that functions are stored in /this/ and not in the local scope...
   else command = (' '+command).replace(/(\s|;)var\s+(\w+)\s*=/g, "$1global.$2 ="); // make sure that variables are stored in /this/ and not in the local scope...
   command = command.replace(/(\s|;)return\sthis;/g, "$1return window;"); // make sure that it is impossible to get back the real window object
-  try {with (this) {eval(command);}}
+  try {eval(command);}
   catch (e) {this.console.error(e);}
 };
 
@@ -9495,6 +9506,10 @@ molmil.autoSetup = function(options, canvas) {
   
   if (options.enable.includes("cli") && ! canvas.commandLine) {
     var cli = new molmil.commandLine(canvas);
+    if (! molmil.commandLines.pyMol) {
+      //molmil.loadPlugin(molmil.settings.src+"plugins/pymol-script.js", init, this, [], true);
+      setPluginPymolScript(this, molmil_dep);
+    }
     if (options.environment) {for (var e in options.environment) cli.environment[e] = options.environment[e];}
   
     if (options.enable.includes("cli-hash")) {
@@ -9520,7 +9535,8 @@ molmil.autoSetup = function(options, canvas) {
   }
   
   var wait = false;
-  if (options.enable.includes("ui") && ! molmil.UI) {wait = true; molmil.loadPlugin(molmil.settings.src+"plugins/UI.js", null, null, null, true);}
+  //if (options.enable.includes("ui") && ! molmil.UI) {wait = true; molmil.loadPlugin(molmil.settings.src+"plugins/UI.js", null, null, null, true);}
+  setPluginUI(this, molmil_dep);
   if (wait) return molmil_dep.asyncStart(molmil.autoSetup, [options, canvas], this, 10);
   
   if (options.enable.includes("ui")) {
@@ -10071,12 +10087,14 @@ mol.displayMode = 4; => wireframe
 
 if (typeof(requestAnimationFrame) != "undefined") molmil.animate_molmilViewers();
 
+/*
 if (! window.molmil_dep) {
   var dep = document.createElement("script")
   dep.src = molmil.settings.src+"molmil_dep.js";
   var head = document.getElementsByTagName("head")[0];
   head.appendChild(dep);
 }
+*/
 
 molmil.initVR = function(soup, callback) {
   var initFakeVR = function() {

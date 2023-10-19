@@ -1,3 +1,5 @@
+export const setPluginLoaders = (molmil, molmil_dep) => {
+
 molmil.decodeUtf8=function(arrayBuffer) {
   var result = "", i = 0, c = 0, c1 = 0, c2 = 0, data = new Uint8Array(arrayBuffer);
  
@@ -1992,3 +1994,4 @@ molmil.viewer.prototype.ssAssign = function(chainObj) {
   
 };
 
+};
